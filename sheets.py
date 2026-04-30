@@ -44,7 +44,7 @@ def get_client():
 def get_spreadsheet():
     """Open the spreadsheet by ID from Streamlit secrets."""
     client = get_client()
-    return client.open_by_key(st.secrets["206394094"])
+    return client.open_by_key(st.secrets["GOOGLE_SHEET_ID"])
 
 
 # ── Users sheet helpers ───────────────────────────────────────────────────────
