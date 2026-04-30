@@ -3,17 +3,9 @@
 # and attendance data (stored in subject sheets like "U", "P", etc.)
 
 # ADD this line:
-# Top of sheets.py — restore this:
-import bcrypt
 
-# create_user — restore this:
-password_hash = bcrypt.hashpw(
-    password.encode("utf-8"), bcrypt.gensalt(rounds=12)
-).decode("utf-8")
-
-# verify_password — restore this:
-def verify_password(plain: str, hashed: str) -> bool:
-    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+# ADD this line:
+from passlib.hash import bcrypt
 import gspread
 import streamlit as st
 from google.oauth2.service_account import Credentials
