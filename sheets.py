@@ -2,7 +2,8 @@
 # Handles both user accounts (stored in a "Users" sheet)
 # and attendance data (stored in subject sheets like "U", "P", etc.)
 
-import bcrypt
+# ADD this line:
+from passlib.hash import bcrypt
 import gspread
 import streamlit as st
 from google.oauth2.service_account import Credentials
@@ -99,10 +100,6 @@ def reg_no_exists(reg_no: str) -> bool:
 
 
 def create_user(email: str, password: str, reg_no: str):
-    """
-    Hash the password and append a new row to the Users sheet.
-    Raises ValueError if the email or reg_no is already taken.
-    """
     email  = email.strip().lower()
     reg_no = reg_no.strip().upper()
 
@@ -111,10 +108,8 @@ def create_user(email: str, password: str, reg_no: str):
     if reg_no_exists(reg_no):
         raise ValueError("This registration number is already registered.")
 
-    # bcrypt hash (cost factor 12)
-    password_hash = bcrypt.hashpw(
-        password.encode("utf-8"), bcrypt.gensalt(rounds=12)
-    ).decode("utf-8")
+    # passlib syntax (replaces bcrypt.hashpw)
+    password_hash = bcrypt.hash(password)
 
     spreadsheet = get_spreadsheet()
     ws = _get_or_create_users_sheet(spreadsheet)
@@ -122,7 +117,8 @@ def create_user(email: str, password: str, reg_no: str):
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+    # passlib syntax (replaces bcrypt.checkpw)
+    return bcrypt.verify(plain, hashed)
 
 
 # ── Attendance helpers ────────────────────────────────────────────────────────
