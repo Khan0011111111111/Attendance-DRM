@@ -3,11 +3,33 @@
 # and attendance data (stored in subject sheets like "U", "P", etc.)
 
 # ADD this line:
-import hashlib  # add this at the top with other imports
+import hashlib
+import os  # add this at the top with other imports
 
 def _prepare_password(password: str) -> bytes:
     """Hash password with SHA-256 first to bypass bcrypt's 72-byte limit."""
     return hashlib.sha256(password.encode("utf-8")).hexdigest().encode("utf-8")
+
+def _hash_password(password: str, salt: str = None) -> str:
+    """Hash password using PBKDF2-SHA256 (built into Python, no size limits)."""
+    if salt is None:
+        salt = os.urandom(32).hex()
+    key = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        salt.encode("utf-8"),
+        iterations=260000
+    ).hex()
+    return f"{salt}${key}"
+
+
+def verify_password(plain: str, stored: str) -> bool:
+    try:
+        salt, _ = stored.split("$")
+        return _hash_password(plain, salt) == stored
+    except Exception:
+        return False
+
 
 def create_user(email: str, password: str, reg_no: str):
     email  = email.strip().lower()
@@ -18,22 +40,11 @@ def create_user(email: str, password: str, reg_no: str):
     if reg_no_exists(reg_no):
         raise ValueError("This registration number is already registered.")
 
-    password_hash = bcrypt.hashpw(
-        _prepare_password(password), bcrypt.gensalt(rounds=12)
-    ).decode("utf-8")
+    password_hash = _hash_password(password)
 
     spreadsheet = get_spreadsheet()
     ws = _get_or_create_users_sheet(spreadsheet)
     ws.append_row([email, password_hash, reg_no])
-
-
-def verify_password(plain: str, hashed: str) -> bool:
-    return bcrypt.checkpw(_prepare_password(plain), hashed.encode("utf-8"))
-# ADD this line:
-from passlib.hash import bcrypt
-import gspread
-import streamlit as st
-from google.oauth2.service_account import Credentials
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
